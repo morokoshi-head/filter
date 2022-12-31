@@ -29,20 +29,26 @@ def main():
 
     paths = glob.glob(os.path.join(in_dir, '*'))
 
-    # Generate gaussian kernel
-    ker = gen_gauss_ker(KER_SZ, SGM)
-
     for path in tqdm(paths):
         img = cv2.imread(path)
-        ch_num = img.shape[2]
+        
+        gauss_img = gauss_filter(img, KER_SZ, SGM)
 
-        conv_chs = []
-        for i in range(ch_num):
-            conv_ch = conv(img[:, :, i], ker)
-            conv_chs.append(conv_ch)
+        cv2.imwrite(os.path.join(out_dir, os.path.basename(path)), gauss_img)
 
-        conv_img = np.array(conv_chs).transpose(TRANS_H_IDX, TRANS_W_IDX, TRANS_CH_IDX)
-        cv2.imwrite(os.path.join(out_dir, os.path.basename(path)), conv_img)
+def gauss_filter(img, ker_sz, sgm):
+    ker = gen_gauss_ker(KER_SZ, SGM)
+
+    ch_num = img.shape[2]
+
+    gauss_chs = []
+    for i in range(ch_num):
+        gauss_ch = conv(img[:, :, i], ker)
+        gauss_chs.append(gauss_ch)
+
+        gauss_img = np.array(gauss_chs).transpose(TRANS_H_IDX, TRANS_W_IDX, TRANS_CH_IDX)
+
+    return gauss_img
 
 def gen_gauss_ker(ker_sz=3, sgm=0.85):
     ker = np.zeros((ker_sz, ker_sz), dtype=np.float64)
@@ -59,20 +65,20 @@ def conv(img, ker):
     ker_sz = ker.shape[0]
 
     ker_d = int((ker_sz-1) / 2)
-    trg_img = np.zeros((ker_sz, ker_sz), dtype=np.uint8)
-    conv_img = np.zeros((img_h, img_w), dtype=np.uint8)
+    trg = np.zeros((ker_sz, ker_sz), dtype=np.uint8)
+    conv = np.zeros((img_h, img_w), dtype=np.uint8)
 
     for y in range(img_h):
         for x in range(img_w):
 
             for j in range(ker_sz):
                 for i in range(ker_sz):
-                    trg_img[j, i] = img[min(abs(y-ker_d+j), img_h-1), \
+                    trg[j, i] = img[min(abs(y-ker_d+j), img_h-1), \
                                         min(abs(x-ker_d+i), img_w-1)]
 
-            conv_img[y, x] = np.round((trg_img * ker).sum())
+            conv[y, x] = np.round((trg * ker).sum())
 
-    return conv_img
+    return conv
 
 if __name__ == '__main__':
     main()
