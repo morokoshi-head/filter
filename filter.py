@@ -74,7 +74,7 @@ def conv(img, ker):
             for j in range(ker_sz):
                 for i in range(ker_sz):
                     trg[j, i] = img[min(abs(y-ker_d+j), img_h-1), \
-                                        min(abs(x-ker_d+i), img_w-1)]
+                                    min(abs(x-ker_d+i), img_w-1)]
 
             conv[y, x] = np.round((trg * ker).sum())
 
